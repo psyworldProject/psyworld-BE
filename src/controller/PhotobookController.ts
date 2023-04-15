@@ -21,10 +21,14 @@ export class PhotobookController {
 		}
 		const photobooks = await myDataBase.getRepository(Photobook).find({
 			relations: ['author'],
+			select: {
+				author: {
+					id: true,
+					username: true,
+					email: true,
+				},
+			},
 		});
-		if (!photobooks) {
-			return res.status(404).send({ message: '일기가 없습니다.' });
-		}
 		res.status(200).json({ photobooks });
 	};
 
@@ -33,6 +37,13 @@ export class PhotobookController {
 		const photobook = await myDataBase.getRepository(Photobook).findOne({
 			where: { id: Number(id) },
 			relations: ['author'],
+			select: {
+				author: {
+					id: true,
+					username: true,
+					email: true,
+				},
+			},
 		});
 		if (!photobook) {
 			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });

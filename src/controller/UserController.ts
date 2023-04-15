@@ -127,7 +127,13 @@ export class UserController {
 	};
 
 	static getUsers = async (req: Request, res: Response) => {
-		const results = await myDataBase.getRepository(User).find();
+		const results = await myDataBase.getRepository(User).find({
+			select: {
+				id: true,
+				username: true,
+				email: true,
+			},
+		});
 		res.status(201).send(results);
 	};
 
@@ -135,6 +141,11 @@ export class UserController {
 		const { username } = req.params;
 		const result = await myDataBase.getRepository(User).findOne({
 			where: { username },
+			select: {
+				id: true,
+				username: true,
+				email: true,
+			},
 		});
 		res.status(201).send(result);
 	};

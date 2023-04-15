@@ -18,9 +18,6 @@ export class DiaryController {
 		const results = await myDataBase.getRepository(Diary).find({
 			relations: ['author'],
 		});
-		if (!results) {
-			return res.status(404).send({ message: '일기가 없습니다.' });
-		}
 		res.status(200).json({ results });
 	};
 
@@ -56,7 +53,7 @@ export class DiaryController {
 		diary.feelingCode = feelingCode;
 		diary.weatherCode = weatherCode;
 		diary.author = author;
-		const result = await myDataBase.getRepository(Diary).save(diary);
+		const result = await myDataBase.getRepository(Diary).insert(diary);
 		res.status(201).send(result);
 	};
 
