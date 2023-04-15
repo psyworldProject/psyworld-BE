@@ -128,4 +128,11 @@ export class UserController {
 		const results = await myDataBase.getRepository(User).find();
 		res.status(201).send(results);
 	};
+
+	static getUser = async (req: Request, res: Response) => {
+		const result = await myDataBase.getRepository(User).findOne({
+			where: { id: Number(req.params.id) },
+		});
+		res.status(201).send(result);
+	};
 }
