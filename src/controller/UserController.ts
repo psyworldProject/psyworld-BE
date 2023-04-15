@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import { User } from '../entity/User';
-import { generateAccessToken, generatePassword, generateRefreshToken, registerToken } from '../util/Auth';
+import { generateAccessToken, generatePassword, generateRefreshToken, registerToken, removeToken } from '../util/Auth';
 import { verify } from 'jsonwebtoken';
 import { myDataBase } from '../db';
 import bcrypt from 'bcrypt';
+import { JwtRequest } from '../middleware/AuthMiddleware';
 
 export class UserController {
 	static checkDuplicate = async (req: Request, res: Response) => {
@@ -69,5 +70,15 @@ export class UserController {
 			maxAge: 3600 * 24 * 30 * 1000,
 		});
 		res.send({ content: decoded, accessToken });
+	};
+
+	static logout = async (req: Request, res: Response) => {
+		const { refreshToken } = req.cookies;
+		if (!refreshToken) {
+			return res.status(400).send({ message: '로그인 상태가 아닙니다.' });
+		}
+		removeToken(refreshToken);
+		res.clearCookie('refreshToken');
+		res.send({ message: '로그아웃 되었습니다.' });
 	};
 }
