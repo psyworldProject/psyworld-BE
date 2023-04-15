@@ -26,12 +26,14 @@ export class UserController {
 		}
 	};
 
-	static register = async (req: Request, res: Response) => {
+	static register = async (req: Request & MulterS3Request, res: Response) => {
 		const { username, email, password } = req.body;
 		const user = new User();
 		user.username = username;
 		user.email = email;
 		user.password = await generatePassword(password);
+		user.statusCode = 0;
+		user.profileImage = req.file.location || '';
 
 		// 회원가입 시 자동 로그인 구현 -> 액세스 토큰 및 리프레시 토큰 발급
 		const accessToken = generateAccessToken(user.id, user.username, user.email);

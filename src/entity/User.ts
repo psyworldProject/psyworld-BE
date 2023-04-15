@@ -1,4 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Diary } from './Diary';
+import { DiaryComment } from './DiaryComments';
 
 @Entity()
 export class User {
@@ -20,6 +22,11 @@ export class User {
 	@Column()
 	statusCode: number;
 
+	@OneToMany(() => Diary, (diary) => diary.author)
+	diaries: Diary[];
+
+	@OneToMany(() => DiaryComment, (diaryComment) => diaryComment.author)
+	diaryComments: DiaryComment[];
 	@CreateDateColumn()
 	createdAt: Date;
 }
