@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from './User';
+import { DiaryComment } from './DiaryComments';
 
 @Entity()
 export class Diary {
@@ -23,4 +24,7 @@ export class Diary {
 
 	@ManyToOne(() => User, (user) => user.diaries)
 	author: User;
+
+	@OneToMany(() => DiaryComment, (diaryComment) => diaryComment.diary)
+	diaryComments: DiaryComment[];
 }
