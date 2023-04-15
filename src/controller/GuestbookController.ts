@@ -78,4 +78,28 @@ export class GuestbookController {
 
 		res.status(200).json({ result });
 	};
+
+	static deleteGuestbook = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+
+		const { id: guestbookId } = req.params;
+		const guestbook = await myDataBase.getRepository(Guestbook).findOne({
+			where: { id: Number(guestbookId) },
+		});
+
+		if (!guestbook) {
+			return res.status(404).send({ message: '해당 방명록을 찾을 수 없습니다.' });
+		}
+
+		const result = await myDataBase.getRepository(Guestbook).delete(guestbook.id);
+
+		res.status(200).json({ result });
+	};
 }
