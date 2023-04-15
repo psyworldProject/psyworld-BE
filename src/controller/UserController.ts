@@ -130,8 +130,9 @@ export class UserController {
 	};
 
 	static getUser = async (req: Request, res: Response) => {
+		const { username } = req.params;
 		const result = await myDataBase.getRepository(User).findOne({
-			where: { id: Number(req.params.id) },
+			where: { username },
 		});
 		res.status(201).send(result);
 	};
