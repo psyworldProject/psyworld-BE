@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Diary } from './Diary';
 import { DiaryComment } from './DiaryComments';
+import { Photobook } from './Photobook';
 
 @Entity()
 export class User {
@@ -27,6 +28,10 @@ export class User {
 
 	@OneToMany(() => DiaryComment, (diaryComment) => diaryComment.author)
 	diaryComments: DiaryComment[];
+
+	@OneToMany(() => Photobook, (photobook) => photobook.author)
+	photobooks: Photobook[];
+
 	@CreateDateColumn()
 	createdAt: Date;
 }
