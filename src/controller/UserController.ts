@@ -2,8 +2,24 @@ import { Request, Response } from 'express';
 import { User } from '../entity/User';
 import { generateAccessToken, generatePassword, generateRefreshToken, registerToken } from '../util/Auth';
 import { verify } from 'jsonwebtoken';
+import { myDataBase } from '../db';
 
 export class UserController {
+	static checkDuplicate = async (req: Request, res: Response) => {
+		// 이메일 중복 체크
+		const { email } = req.body;
+		const existUser = await myDataBase.getRepository(User).findOne({
+			where: [{ email }],
+		});
+
+		// 중복 -> 400 리턴
+		if (existUser) {
+			res.status(400).send({ message: '이미 존재하는 이메일입니다.' });
+		} else {
+			res.status(200).send({ message: '사용 가능한 이메일입니다.' });
+		}
+	};
+
 	static register = async (req: Request, res: Response) => {
 		const { username, email, password } = req.body;
 		const user = new User();
