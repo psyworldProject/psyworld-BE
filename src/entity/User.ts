@@ -21,9 +21,9 @@ export class User {
 	@Column()
 	statusCode: number;
 
-	@CreateDateColumn()
-	createdAt: Date;
-
 	@OneToMany(() => Diary, (diary) => diary.author)
 	diaries: Diary[];
+
+	@CreateDateColumn()
+	createdAt: Date;
 }
