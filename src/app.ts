@@ -1,43 +1,36 @@
-import { myDataBase } from "./db";
-import express, { Request, Response } from "express";
-import cors from "cors";
-import AuthRouter from "./router/auth";
-import diaryRouter from "./router/diary";
-import usersRouter from "./router/users";
-import { upload } from "./uploadS3";
+import { myDataBase } from './db';
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser'; // 불러오기
+import AuthRouter from './router/auth';
 
+// 캐시 형태로 발급된 토큰을 저장하기 위한 객체
 export const tokenList = {};
 
 myDataBase
-  .initialize()
-  .then(() => {
-    console.log("DataBase has been initialized!");
-  })
-  .catch((error) => {
-    console.error("Error during DataBase initialization:", error);
-  });
+	.initialize()
+	.then(() => {
+		console.log('DataBase has been initialized!');
+	})
+	.catch((error) => {
+		console.error('Error during DataBase initialization:', error);
+	});
 
 const app = express();
 app.use(express.json());
 app.use(
-  express.urlencoded({
-    extended: true,
-  })
+	express.urlencoded({
+		extended: true,
+	})
 );
 app.use(
-  cors({
-    origin: true, // 모두 허용
-  })
+	cors({
+		origin: true, // 모두 허용
+	})
 );
-
-app.use("/users", usersRouter);
-app.use("/auth", AuthRouter);
-app.use("/diary", diaryRouter);
-
-app.post("/upload", upload.single("img"), (req: Request, res: Response) => {
-  res.json(req.file);
-});
+app.use(cookieParser()); // 미들웨어 등록
+app.use('/auth', AuthRouter);
 
 app.listen(3000, () => {
-  console.log("Express server has started on port 3000");
+	console.log('Express server has started on port 3000');
 });

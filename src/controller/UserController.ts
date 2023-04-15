@@ -1,125 +1,84 @@
-import { Request, Response } from "express";
-import { myDataBase } from "../db";
-import { User } from "../entity/User";
-import {
-  generateAccessToken,
-  generatePassword,
-  generateRefreshToken,
-  registerToken,
-} from "../util/Auth";
-import { verify } from "jsonwebtoken";
-import bcript from "bcrypt";
+import { Request, Response } from 'express';
+import { User } from '../entity/User';
+import { generateAccessToken, generatePassword, generateRefreshToken, registerToken, removeToken } from '../util/Auth';
+import { verify } from 'jsonwebtoken';
+import { myDataBase } from '../db';
+import bcrypt from 'bcrypt';
+import { JwtRequest } from '../middleware/AuthMiddleware';
 
 export class UserController {
-  static createUser = async (req: Request, res: Response) => {
-    const { username } = req.body;
+	static checkDuplicate = async (req: Request, res: Response) => {
+		// 이메일 중복 체크
+		const { email } = req.body;
+		const existUser = await myDataBase.getRepository(User).findOne({
+			where: { email },
+		});
 
-    const user = new User();
-    user.username = username;
+		// 중복 -> 400 리턴
+		if (existUser) {
+			res.status(400).send({ message: '이미 존재하는 이메일입니다.' });
+		} else {
+			res.status(200).send({ message: '사용 가능한 이메일입니다.' });
+		}
+	};
 
-    const result = await myDataBase.getRepository(User).save(user);
-    res.send(result);
-  };
+	static register = async (req: Request, res: Response) => {
+		const { username, email, password } = req.body;
+		const user = new User();
+		user.username = username;
+		user.email = email;
+		user.password = await generatePassword(password);
 
-  static getUser = async (req: Request, res: Response) => {
-    const users = await myDataBase.getRepository(User).find();
-    res.send(users);
-  };
+		// 회원가입 시 자동 로그인 구현 -> 액세스 토큰 및 리프레시 토큰 발급
+		const accessToken = generateAccessToken(user.id, user.username, user.email);
+		const refreshToken = generateRefreshToken(user.id, user.username, user.email);
+		registerToken(refreshToken, accessToken);
+		// 토큰 복호화해서 담겨있는 유저 정보 및 토큰 만료 정보도 함께 넘겨줌
+		const decoded = verify(accessToken, process.env.SECRET_ATOKEN);
 
-  static register = async (req: Request, res: Response) => {
-    const { email, password, username } = req.body;
+		res.cookie('refreshToken', refreshToken, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 * 30 * 1000 });
+		res.send({ content: decoded, accessToken });
+	};
 
-    // 이메일 또는 유저네임이 없는 경우 (중복 유저 체크)
-    const exisUser = await myDataBase.getRepository(User).findOne({
-      where: [{ email }, { username }],
-    });
+	static login = async (req: Request, res: Response) => {
+		const { email, password } = req.body;
 
-    // 이미 존재하는 이메일 또는 유저네임인지 확인
-    if (exisUser) {
-      return res.status(400).json({
-        message: "이미 존재하는 이메일 또는 유저네임입니다.",
-      });
-    }
+		// 가입된 유저인지 확인
+		const user = await myDataBase.getRepository(User).findOne({
+			where: { email },
+		});
 
-    // 비밀번호를 암호화
-    const user = new User();
-    user.email = email;
-    user.password = await generatePassword(password);
-    user.username = username;
+		// 가입된 유저가 아니면 400 리턴
+		if (!user) {
+			return res.status(400).send({ message: '이메일 또는 비밀번호를 다시 확인하세요.' });
+		}
 
-    // 유저를 데이터베이스에 저장
-    const newUser = await myDataBase.getRepository(User).save(user);
+		// 가입된 유저면 비밀번호 확인
+		const validPassword = await bcrypt.compare(password, user.password);
+		if (!validPassword) {
+			return res.status(400).send({ message: '이메일 또는 비밀번호를 다시 확인하세요.' });
+		}
 
-    // 토큰 생성
-    const accessToken = generateAccessToken(
-      newUser.id,
-      newUser.username,
-      newUser.email
-    );
+		const accessToken = generateAccessToken(user.id, user.username, user.email);
+		const refreshToken = generateRefreshToken(user.id, user.username, user.email);
+		registerToken(refreshToken, accessToken);
 
-    // 리프레시 토큰 생성
-    const refreshToken = generateRefreshToken(
-      newUser.id,
-      newUser.username,
-      newUser.email
-    );
+		const decoded = verify(accessToken, process.env.SECRET_ATOKEN);
+		res.cookie('refreshToken', refreshToken, {
+			path: '/',
+			httpOnly: true,
+			maxAge: 3600 * 24 * 30 * 1000,
+		});
+		res.send({ content: decoded, accessToken });
+	};
 
-    // 토큰을 저장
-    registerToken(refreshToken, accessToken);
-
-    // 토큰을 쿠키에 저장
-    const decoded = verify(accessToken, process.env.SECRET_ATOKEN);
-
-    res.cookie("refreshToken", refreshToken, {
-      path: "/",
-      httpOnly: true,
-      maxAge: 3600 * 24 * 30 * 1000,
-    });
-    res.send({
-      content: decoded,
-      accessToken,
-    });
-  };
-
-  static login = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-    const user = await myDataBase.getRepository(User).findOne({
-      where: { email },
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        error: "존재하지 않는 이메일입니다.",
-      });
-    }
-
-    const validPassword = await bcript.compare(password, user.password);
-
-    if (!validPassword) {
-      return res.status(400).json({
-        error: "비밀번호가 일치하지 않습니다.",
-      });
-    }
-
-    const accessToken = generateAccessToken(user.id, user.username, user.email);
-
-    const refreshToken = generateRefreshToken(
-      user.id,
-      user.username,
-      user.email
-    );
-
-    registerToken(refreshToken, accessToken);
-
-    const decoded = verify(accessToken, process.env.SECRET_ATOKEN);
-    res.cookie("refreshToken", refreshToken, {
-      path: "/",
-      httpOnly: true,
-      maxAge: 3600 * 24 * 30 * 1000,
-    });
-    res.send({
-      content: decoded,
-      accessToken,
-    });
-  };
+	static logout = async (req: Request, res: Response) => {
+		const { refreshToken } = req.cookies;
+		if (!refreshToken) {
+			return res.status(400).send({ message: '로그인 상태가 아닙니다.' });
+		}
+		removeToken(refreshToken);
+		res.clearCookie('refreshToken');
+		res.send({ message: '로그아웃 되었습니다.' });
+	};
 }
