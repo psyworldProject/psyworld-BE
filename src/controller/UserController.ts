@@ -81,4 +81,23 @@ export class UserController {
 		res.clearCookie('refreshToken');
 		res.send({ message: '로그아웃 되었습니다.' });
 	};
+
+	static withdrawel = async (req: JwtRequest, res: Response) => {
+		// 해당 유저가 탈퇴 요청을 하는지 확인
+		const { id: userId } = req.decoded;
+		const { email, password } = req.body;
+		const currentUser = await myDataBase.getRepository(User).findOne({
+			where: { email },
+		});
+		const validPassword = await bcrypt.compare(password, currentUser.password);
+		//
+		if (userId !== currentUser.id) {
+			return res.status(400).send({ message: '존재하지 않는 유저입니다.' });
+		}
+		if (email !== currentUser.email || !validPassword) {
+			return res.status(400).send({ message: '이메일 또는 비밀번호를 다시 확인하세요.' });
+		}
+		await myDataBase.getRepository(User).remove(currentUser);
+		res.send({ message: '탈퇴되었습니다.' });
+	};
 }
