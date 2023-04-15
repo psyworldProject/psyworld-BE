@@ -88,4 +88,28 @@ export class DiaryController {
 		const results = await myDataBase.getRepository(Diary).update(diary.id, newDiary);
 		res.send(results);
 	};
+
+	// 다이어리 삭제하기
+	static deleteDiary = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: {
+				diaries: true,
+			},
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+		const currentDiary = await myDataBase.getRepository(Diary).findOne({
+			where: { id: Number(req.params.id) },
+		});
+
+		if (!currentDiary) {
+			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+
+		await myDataBase.getRepository(Diary).remove(currentDiary);
+		res.send({ message: '해당 다이어리가 삭제되었습니다.' });
+	};
 }
