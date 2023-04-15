@@ -6,6 +6,10 @@ import { myDataBase } from '../db';
 import bcrypt from 'bcrypt';
 import { JwtRequest } from '../middleware/AuthMiddleware';
 
+interface MulterS3Request extends Request {
+	file: Express.MulterS3.File;
+}
+
 export class UserController {
 	static checkDuplicate = async (req: Request, res: Response) => {
 		// 이메일 중복 체크
@@ -92,12 +96,36 @@ export class UserController {
 		const validPassword = await bcrypt.compare(password, currentUser.password);
 		//
 		if (userId !== currentUser.id) {
-			return res.status(400).send({ message: '존재하지 않는 유저입니다.' });
+			return res.status(401).send({ message: '접근 권한이 없습니다.' });
 		}
 		if (email !== currentUser.email || !validPassword) {
 			return res.status(400).send({ message: '이메일 또는 비밀번호를 다시 확인하세요.' });
 		}
 		await myDataBase.getRepository(User).remove(currentUser);
 		res.send({ message: '탈퇴되었습니다.' });
+	};
+
+	static updateProfile = async (req: JwtRequest & MulterS3Request, res: Response) => {
+		const { id: userId } = req.decoded;
+		const currentUser = await myDataBase.getRepository(User).findOne({
+			where: { id: Number(req.params.id) },
+		});
+
+		if (userId !== currentUser.id) {
+			return res.status(401).send({ message: '접근 권한이 없습니다.' });
+		}
+
+		const { statusCode } = req.body;
+		const { location } = req.file;
+		const editedUser = new User();
+		editedUser.profileImage = location;
+		editedUser.statusCode = statusCode;
+		const results = await myDataBase.getRepository(User).update(userId, editedUser);
+		res.send(results);
+	};
+
+	static getUsers = async (req: Request, res: Response) => {
+		const results = await myDataBase.getRepository(User).find();
+		res.status(201).send(results);
 	};
 }

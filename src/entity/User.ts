@@ -14,6 +14,12 @@ export class User {
 	@Column()
 	password: string;
 
+	@Column()
+	profileImage: string;
+
+	@Column()
+	statusCode: number;
+
 	@CreateDateColumn()
 	createdAt: Date;
 }
