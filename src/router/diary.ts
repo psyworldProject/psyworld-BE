@@ -6,4 +6,5 @@ const routes = Router();
 
 routes.get('', DiaryController.getDiaries);
 routes.post('', AuthMiddleware.verifyToken, DiaryController.createDiary);
+routes.get('/:id', DiaryController.getDiary);
 export default routes;
