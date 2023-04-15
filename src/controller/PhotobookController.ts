@@ -85,5 +85,26 @@ export class PhotobookController {
 		res.send(result);
 	};
 
-	static deletePhotobook = async (req: JwtRequest, res: Response) => {};
+	static deletePhotobook = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: {
+				photobooks: true,
+			},
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+		const currentPhoto = await myDataBase.getRepository(Photobook).findOne({
+			where: { id: Number(req.params.id) },
+		});
+
+		if (!currentPhoto) {
+			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+
+		await myDataBase.getRepository(Photobook).remove(currentPhoto);
+		res.send({ message: '해당 다이어리가 삭제되었습니다.' });
+	};
 }
