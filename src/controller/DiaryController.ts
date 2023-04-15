@@ -59,4 +59,33 @@ export class DiaryController {
 		const result = await myDataBase.getRepository(Diary).save(diary);
 		res.status(201).send(result);
 	};
+
+	// 다이어리 수정하기
+	static updateDiary = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: {
+				diaries: true,
+			},
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+		const { title, content, weatherCode, feelingCode } = req.body;
+		const diary = await myDataBase.getRepository(Diary).findOne({
+			where: { id: Number(req.params.id) },
+		});
+		if (!diary) {
+			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+
+		const newDiary = new Diary();
+		newDiary.title = title;
+		newDiary.content = content;
+		newDiary.weatherCode = weatherCode;
+		newDiary.feelingCode = feelingCode;
+		const results = await myDataBase.getRepository(Diary).update(diary.id, newDiary);
+		res.send(results);
+	};
 }
