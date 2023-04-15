@@ -63,7 +63,27 @@ export class PhotobookController {
 		res.status(201).json({ result });
 	};
 
-	static updatePhotobook = async (req: JwtRequest, res: Response) => {};
+	static updatePhotobook = async (req: JwtRequest & MulterS3Request, res: Response) => {
+		const { id: userId } = req.decoded;
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: {
+				photobooks: true,
+			},
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+
+		const { title, content } = req.body;
+		const { location } = req.file;
+		const photobook = new Photobook();
+		photobook.title = title;
+		photobook.content = content;
+		photobook.image = location ? location : photobook.image;
+		const result = await myDataBase.getRepository(Photobook).update(userId, photobook);
+		res.send(result);
+	};
 
 	static deletePhotobook = async (req: JwtRequest, res: Response) => {};
 }
