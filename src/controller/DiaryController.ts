@@ -53,7 +53,7 @@ export class DiaryController {
 		diary.feelingCode = feelingCode;
 		diary.weatherCode = weatherCode;
 		diary.author = author;
-		const result = await myDataBase.getRepository(Diary).save(diary);
+		const result = await myDataBase.getRepository(Diary).insert(diary);
 		res.status(201).send(result);
 	};
 
