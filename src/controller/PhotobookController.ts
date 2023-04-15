@@ -24,7 +24,17 @@ export class PhotobookController {
 		res.status(200).json({ photobooks });
 	};
 
-	static getPhotobook = async (req: Request, res: Response) => {};
+	static getPhotobook = async (req: Request, res: Response) => {
+		const { id } = req.params;
+		const photobook = await myDataBase.getRepository(Photobook).findOne({
+			where: { id: Number(id) },
+			relations: ['author'],
+		});
+		if (!photobook) {
+			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+		res.status(200).json({ photobook });
+	};
 
 	static createPhotobook = async (req: JwtRequest, res: Response) => {};
 
