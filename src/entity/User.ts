@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Diary } from './Diary';
 
 @Entity()
 export class User {
@@ -22,4 +23,7 @@ export class User {
 
 	@CreateDateColumn()
 	createdAt: Date;
+
+	@OneToMany(() => Diary, (diary) => diary.author)
+	diaries: Diary[];
 }
