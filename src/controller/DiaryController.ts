@@ -18,9 +18,6 @@ export class DiaryController {
 		const results = await myDataBase.getRepository(Diary).find({
 			relations: ['author'],
 		});
-		if (!results) {
-			return res.status(404).send({ message: '일기가 없습니다.' });
-		}
 		res.status(200).json({ results });
 	};
 

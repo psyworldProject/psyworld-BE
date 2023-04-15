@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } f
 import { Diary } from './Diary';
 import { DiaryComment } from './DiaryComments';
 import { Photobook } from './Photobook';
+import { Guestbook } from './Guestbook';
 
 @Entity()
 export class User {
@@ -31,6 +32,9 @@ export class User {
 
 	@OneToMany(() => Photobook, (photobook) => photobook.author)
 	photobooks: Photobook[];
+
+	@OneToMany(() => Guestbook, (guestbook) => guestbook.owner)
+	guestbooks: Guestbook[];
 
 	@CreateDateColumn()
 	createdAt: Date;

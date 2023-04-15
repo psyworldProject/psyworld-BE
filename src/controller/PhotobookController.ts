@@ -22,9 +22,6 @@ export class PhotobookController {
 		const photobooks = await myDataBase.getRepository(Photobook).find({
 			relations: ['author'],
 		});
-		if (!photobooks) {
-			return res.status(404).send({ message: '일기가 없습니다.' });
-		}
 		res.status(200).json({ photobooks });
 	};
 
