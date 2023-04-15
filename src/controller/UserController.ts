@@ -3,13 +3,14 @@ import { User } from '../entity/User';
 import { generateAccessToken, generatePassword, generateRefreshToken, registerToken } from '../util/Auth';
 import { verify } from 'jsonwebtoken';
 import { myDataBase } from '../db';
+import bcrypt from 'bcrypt';
 
 export class UserController {
 	static checkDuplicate = async (req: Request, res: Response) => {
 		// 이메일 중복 체크
 		const { email } = req.body;
 		const existUser = await myDataBase.getRepository(User).findOne({
-			where: [{ email }],
+			where: { email },
 		});
 
 		// 중복 -> 400 리턴
@@ -35,6 +36,38 @@ export class UserController {
 		const decoded = verify(accessToken, process.env.SECRET_ATOKEN);
 
 		res.cookie('refreshToken', refreshToken, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 * 30 * 1000 });
+		res.send({ content: decoded, accessToken });
+	};
+
+	static login = async (req: Request, res: Response) => {
+		const { email, password } = req.body;
+
+		// 가입된 유저인지 확인
+		const user = await myDataBase.getRepository(User).findOne({
+			where: { email },
+		});
+
+		// 가입된 유저가 아니면 400 리턴
+		if (!user) {
+			return res.status(400).send({ message: '이메일 또는 비밀번호를 다시 확인하세요.' });
+		}
+
+		// 가입된 유저면 비밀번호 확인
+		const validPassword = await bcrypt.compare(password, user.password);
+		if (!validPassword) {
+			return res.status(400).send({ message: '이메일 또는 비밀번호를 다시 확인하세요.' });
+		}
+
+		const accessToken = generateAccessToken(user.id, user.username, user.email);
+		const refreshToken = generateRefreshToken(user.id, user.username, user.email);
+		registerToken(refreshToken, accessToken);
+
+		const decoded = verify(accessToken, process.env.SECRET_ATOKEN);
+		res.cookie('refreshToken', refreshToken, {
+			path: '/',
+			httpOnly: true,
+			maxAge: 3600 * 24 * 30 * 1000,
+		});
 		res.send({ content: decoded, accessToken });
 	};
 }

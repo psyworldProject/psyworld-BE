@@ -5,5 +5,6 @@ const routes = Router();
 
 routes.post('/register', UserController.register);
 routes.post('/check', UserController.checkDuplicate);
+routes.post('/login', UserController.login);
 
 export default routes;
