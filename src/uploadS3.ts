@@ -1,9 +1,8 @@
-import dotenv from 'dotenv';
-import { Request } from 'express';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
 import { S3Client } from '@aws-sdk/client-s3';
-
+import { Request } from 'express';
+import dotenv from 'dotenv';
 dotenv.config();
 
 interface KeyCallback {
