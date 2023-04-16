@@ -3,14 +3,14 @@ import { UserController } from '../controller/UserController';
 import { AuthMiddleware } from '../middleware/AuthMiddleware';
 import { upload } from '../middleware/uploadS3';
 
-const routes = Router();
+const router = Router();
 
-routes.post('/register', upload.single('image'), UserController.register);
-routes.post('/check', UserController.checkDuplicate);
-routes.post('/login', UserController.login);
-routes.post('/logout', UserController.logout);
-routes.delete('/withdrawel', AuthMiddleware.verifyToken, UserController.withdrawel);
-routes.put('/:id', upload.single('image'), AuthMiddleware.verifyToken, UserController.updateProfile);
-routes.get('/:id', UserController.getUser);
-routes.get('', UserController.getUsers);
-export default routes;
+router.post('/register', upload.single('image'), UserController.register);
+router.post('/check', UserController.checkDuplicate);
+router.post('/login', UserController.login);
+router.post('/logout', UserController.logout);
+router.delete('/withdrawel', AuthMiddleware.verifyToken, UserController.withdrawel);
+router.put('/:id', upload.single('image'), AuthMiddleware.verifyToken, UserController.updateProfile);
+router.get('/:id', UserController.getUser);
+router.get('', UserController.getUsers);
+export default router;

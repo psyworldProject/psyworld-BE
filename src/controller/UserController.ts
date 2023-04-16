@@ -5,6 +5,7 @@ import { verify } from 'jsonwebtoken';
 import { myDataBase } from '../db';
 import bcrypt from 'bcrypt';
 import { JwtRequest } from '../middleware/AuthMiddleware';
+import { Follow } from '../entity/Follow';
 
 interface MulterS3Request extends Request {
 	file: Express.MulterS3.File;
@@ -148,5 +149,72 @@ export class UserController {
 			},
 		});
 		res.status(201).send(result);
+	};
+
+	static getFollowings = async (req: Request, res: Response) => {
+		const { id: userId } = req.params;
+		const user = await myDataBase.getRepository(User).findOne({
+			where: { id: Number(userId) },
+		});
+		if (!user) {
+			return res.status(400).send({ message: '존재하지 않는 유저입니다.' });
+		}
+		const following = await myDataBase.getRepository(Follow).find({
+			where: { follower: { id: Number(userId) } },
+			relations: ['following'],
+		});
+		res.status(201).send({ following });
+	};
+
+	static getFollowers = async (req: Request, res: Response) => {
+		const { id: userId } = req.params;
+		const user = await myDataBase.getRepository(User).findOne({
+			where: { id: Number(userId) },
+			relations: ['followers'],
+		});
+		if (!user) {
+			return res.status(400).send({ message: '존재하지 않는 유저입니다.' });
+		}
+
+		const follower = await myDataBase.getRepository(Follow).find({
+			where: { following: { id: Number(userId) } },
+			relations: ['follower'],
+		});
+		res.status(201).send({ follower });
+	};
+
+	static followUser = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+
+		const follower = await myDataBase.getRepository(User).findOne({
+			where: { id: Number(userId) },
+		});
+
+		if (!follower) {
+			return res.status(400).send({ message: '존재하지 않는 유저입니다.' });
+		}
+
+		const following = await myDataBase.getRepository(User).findOne({
+			where: { id: Number(req.params.id) },
+		});
+		if (!following) {
+			return res.status(400).send({ message: '존재하지 않는 유저입니다.' });
+		}
+		// 이미 해당 유저를 팔로우하고 있는지 확인
+		const isExist = await myDataBase.getRepository(Follow).findOne({
+			where: { follower: { id: follower.id }, following: { id: following.id } },
+		});
+
+		console.log(isExist);
+		if (isExist) {
+			await myDataBase.getRepository(Follow).remove(isExist);
+			return res.status(201).send({ message: '팔로우가 취소되었습니다.' });
+		}
+		const newFollow = new Follow();
+		newFollow.follower = follower;
+		newFollow.following = following;
+
+		const result = await myDataBase.getRepository(Follow).save(newFollow);
+		return res.status(201).send({ message: '팔로우 되었습니다.' });
 	};
 }

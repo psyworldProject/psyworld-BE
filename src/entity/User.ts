@@ -1,10 +1,12 @@
-import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Diary } from './Diary';
 import { DiaryComment } from './DiaryComments';
 import { Photobook } from './Photobook';
 import { Guestbook } from './Guestbook';
 import { Like } from './Like';
 import { PhotobookComment } from './PhotobookComment';
+import { GuestbookComment } from './GuestbookComment';
+import { Follow } from './Follow';
 
 @Entity()
 export class User {
@@ -41,8 +43,17 @@ export class User {
 	@OneToMany(() => Guestbook, (guestbook) => guestbook.owner)
 	guestbooks: Guestbook[];
 
+	@OneToMany(() => GuestbookComment, (photobookComment) => photobookComment.author)
+	guestbookComments: PhotobookComment[];
+
 	@OneToMany(() => Like, (like) => like.user)
 	likes: Like[];
+
+	@OneToMany(() => Follow, (follow) => follow.follower)
+	followers: Follow[];
+
+	@OneToMany(() => Follow, (follow) => follow.following)
+	following: Follow[];
 
 	@CreateDateColumn()
 	createdAt: Date;

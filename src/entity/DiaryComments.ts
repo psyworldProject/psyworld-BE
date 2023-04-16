@@ -10,12 +10,12 @@ export class DiaryComment {
 	@Column()
 	content: string;
 
-	@ManyToOne(() => Diary, (diary) => diary.diaryComments)
+	@ManyToOne(() => Diary, (diary) => diary.diaryComments, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
 	diary: Diary;
 
 	@CreateDateColumn()
 	createdAt: Date;
 
-	@ManyToOne(() => User, (user) => user.diaryComments)
+	@ManyToOne(() => User, (user) => user.diaryComments, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
 	author: User;
 }
