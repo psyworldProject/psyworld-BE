@@ -10,12 +10,12 @@ export class GuestbookComment {
 	@Column()
 	content: string;
 
-	@ManyToOne(() => Guestbook, (guestbook) => guestbook.guestbookComments)
+	@ManyToOne(() => Guestbook, (guestbook) => guestbook.guestbookComments, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
 	guestbook: Guestbook;
 
 	@CreateDateColumn()
 	createdAt: Date;
 
-	@ManyToOne(() => User, (user) => user.guestbookComments)
+	@ManyToOne(() => User, (user) => user.guestbookComments, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
 	author: User;
 }

@@ -90,9 +90,13 @@ export class DiaryController {
 		const { title, content, weatherCode, feelingCode } = req.body;
 		const diary = await myDataBase.getRepository(Diary).findOne({
 			where: { id: Number(req.params.id) },
+			relations: ['author'],
 		});
 		if (!diary) {
 			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+		if (diary.author.id !== userId) {
+			return res.status(403).send({ message: '해당 일기를 수정할 수 있는 권한이 없습니다.' });
 		}
 
 		const newDiary = new Diary();
@@ -118,12 +122,15 @@ export class DiaryController {
 		}
 		const currentDiary = await myDataBase.getRepository(Diary).findOne({
 			where: { id: Number(req.params.id) },
+			relations: ['author', 'diaryComments'],
 		});
 
 		if (!currentDiary) {
 			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
 		}
-
+		if (currentDiary.author.id !== userId) {
+			return res.status(403).send({ message: '해당 일기를 삭제할 수 있는 권한이 없습니다.' });
+		}
 		await myDataBase.getRepository(Diary).remove(currentDiary);
 		res.send({ message: '해당 다이어리가 삭제되었습니다.' });
 	};
@@ -168,18 +175,17 @@ export class DiaryController {
 			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
 		}
 
-		const { id: diaryId, commentId } = req.params;
-		const diary = await myDataBase.getRepository(Diary).findOne({
-			where: { id: Number(diaryId) },
-		});
-		if (!diary) {
-			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
-		}
+		const { commentId } = req.params;
+
 		const comment = await myDataBase.getRepository(DiaryComment).findOne({
 			where: { id: Number(commentId) },
+			relations: ['author'],
 		});
 		if (!comment) {
 			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
+		}
+		if (comment.author.id !== author.id) {
+			return res.status(403).send({ message: '해당 댓글을 수정할 수 있는 권한이 없습니다.' });
 		}
 		const { content } = req.body;
 		const newComment = new DiaryComment();
@@ -200,18 +206,17 @@ export class DiaryController {
 		if (!author) {
 			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
 		}
-		const { id: diaryId, commentId } = req.params;
-		const diary = await myDataBase.getRepository(Diary).findOne({
-			where: { id: Number(diaryId) },
-		});
-		if (!diary) {
-			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
-		}
+		const { commentId } = req.params;
+
 		const currentComment = await myDataBase.getRepository(DiaryComment).findOne({
 			where: { id: Number(commentId) },
+			relations: ['author'],
 		});
 		if (!currentComment) {
 			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
+		}
+		if (currentComment.author.id !== author.id) {
+			return res.status(403).send({ message: '해당 댓글을 삭제할 수 있는 권한이 없습니다.' });
 		}
 		await myDataBase.getRepository(DiaryComment).remove(currentComment);
 		res.send({ message: '해당 댓글이 삭제되었습니다.' });

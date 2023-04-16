@@ -10,12 +10,12 @@ export class PhotobookComment {
 	@Column()
 	content: string;
 
-	@ManyToOne(() => Photobook, (photobook) => photobook.photobookComments)
+	@ManyToOne(() => Photobook, (photobook) => photobook.photobookComments, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
 	photobook: Photobook;
+
+	@ManyToOne(() => User, (user) => user.photobookComments, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+	author: User;
 
 	@CreateDateColumn()
 	createdAt: Date;
-
-	@ManyToOne(() => User, (user) => user.photobookComments)
-	author: User;
 }

@@ -110,14 +110,24 @@ export class PhotobookController {
 		if (!author) {
 			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
 		}
+		const { id: photobookId } = req.params;
+		const photobook = await myDataBase.getRepository(Photobook).findOne({
+			where: { id: Number(photobookId) },
+		});
+		if (!photobook) {
+			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+		if (photobook.author.id !== userId) {
+			return res.status(403).send({ message: '해당 일기를 수정할 권한이 없습니다.' });
+		}
 
 		const { title, content } = req.body;
 		const { location } = req.file;
-		const photobook = new Photobook();
-		photobook.title = title;
-		photobook.content = content;
-		photobook.image = location ? location : photobook.image;
-		const result = await myDataBase.getRepository(Photobook).update(userId, photobook);
+		const newPhotobook = new Photobook();
+		newPhotobook.title = title;
+		newPhotobook.content = content;
+		newPhotobook.image = location ? location : newPhotobook.image;
+		const result = await myDataBase.getRepository(Photobook).update(photobook.id, newPhotobook);
 		res.send(result);
 	};
 
@@ -138,6 +148,9 @@ export class PhotobookController {
 
 		if (!currentPhoto) {
 			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+		if (currentPhoto.author.id !== userId) {
+			return res.status(403).send({ message: '해당 일기를 삭제할 권한이 없습니다.' });
 		}
 
 		await myDataBase.getRepository(Photobook).remove(currentPhoto);
@@ -212,18 +225,16 @@ export class PhotobookController {
 		if (!author) {
 			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
 		}
-		const { id: photobookId, commentId } = req.params;
-		const photobook = await myDataBase.getRepository(Photobook).findOne({
-			where: { id: Number(photobookId) },
-		});
-		if (!photobook) {
-			return res.status(404).send({ message: '해당 사진첩을 찾을 수 없습니다.' });
-		}
+		const { commentId } = req.params;
+
 		const currentComment = await myDataBase.getRepository(PhotobookComment).findOne({
 			where: { id: Number(commentId) },
 		});
 		if (!currentComment) {
 			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
+		}
+		if (currentComment.author.id !== userId) {
+			return res.status(403).send({ message: '해당 댓글을 수정할 권한이 없습니다.' });
 		}
 		const { content } = req.body;
 		const newComment = new PhotobookComment();
@@ -243,18 +254,16 @@ export class PhotobookController {
 		if (!author) {
 			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
 		}
-		const { id: photobookId, commentId } = req.params;
-		const photobook = await myDataBase.getRepository(Photobook).findOne({
-			where: { id: Number(photobookId) },
-		});
-		if (!photobook) {
-			return res.status(404).send({ message: '해당 사진첩을 찾을 수 없습니다.' });
-		}
+		const { commentId } = req.params;
+
 		const currentComment = await myDataBase.getRepository(PhotobookComment).findOne({
 			where: { id: Number(commentId) },
 		});
 		if (!currentComment) {
 			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
+		}
+		if (currentComment.author.id !== userId) {
+			return res.status(403).send({ message: '해당 댓글을 삭제할 권한이 없습니다.' });
 		}
 		await myDataBase.getRepository(PhotobookComment).remove(currentComment);
 		res.send({ message: '해당 댓글이 삭제되었습니다.' });
