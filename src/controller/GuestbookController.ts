@@ -25,6 +25,9 @@ export class GuestbookController {
 					profileImage: true,
 				},
 				guestbookComments: {
+					id: true,
+					content: true,
+					createdAt: true,
 					author: {
 						id: true,
 						username: true,
@@ -134,7 +137,8 @@ export class GuestbookController {
 		const newComment = new GuestbookComment();
 		newComment.content = content;
 		newComment.author = author;
-		const result = await myDataBase.getRepository(Guestbook).update(guestbook.id, guestbook);
+		newComment.guestbook = guestbook;
+		const result = await myDataBase.getRepository(GuestbookComment).insert(newComment);
 		res.status(201).json({ result });
 	};
 	static updateComment = async (req: JwtRequest, res: Response) => {};
