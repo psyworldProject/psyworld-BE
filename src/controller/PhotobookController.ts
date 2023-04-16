@@ -200,4 +200,63 @@ export class PhotobookController {
 		const result = await myDataBase.getRepository(PhotobookComment).save(comment);
 		res.status(201).send(result);
 	};
+
+	static updateComment = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: {
+				photobooks: true,
+			},
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+		const { id: photobookId, commentId } = req.params;
+		const photobook = await myDataBase.getRepository(Photobook).findOne({
+			where: { id: Number(photobookId) },
+		});
+		if (!photobook) {
+			return res.status(404).send({ message: '해당 사진첩을 찾을 수 없습니다.' });
+		}
+		const currentComment = await myDataBase.getRepository(PhotobookComment).findOne({
+			where: { id: Number(commentId) },
+		});
+		if (!currentComment) {
+			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
+		}
+		const { content } = req.body;
+		const newComment = new PhotobookComment();
+		newComment.content = content;
+		const results = await myDataBase.getRepository(PhotobookComment).update(currentComment.id, newComment);
+		res.send(results);
+	};
+
+	static deleteComment = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: {
+				photobooks: true,
+			},
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+		const { id: photobookId, commentId } = req.params;
+		const photobook = await myDataBase.getRepository(Photobook).findOne({
+			where: { id: Number(photobookId) },
+		});
+		if (!photobook) {
+			return res.status(404).send({ message: '해당 사진첩을 찾을 수 없습니다.' });
+		}
+		const currentComment = await myDataBase.getRepository(PhotobookComment).findOne({
+			where: { id: Number(commentId) },
+		});
+		if (!currentComment) {
+			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
+		}
+		await myDataBase.getRepository(PhotobookComment).remove(currentComment);
+		res.send({ message: '해당 댓글이 삭제되었습니다.' });
+	};
 }
