@@ -35,6 +35,9 @@ export class DiaryController {
 					profileImage: true,
 				},
 				diaryComments: {
+					id: true,
+					content: true,
+					createdAt: true,
 					author: {
 						id: true,
 						username: true,
@@ -150,5 +153,67 @@ export class DiaryController {
 		comment.diary = diary;
 		const result = await myDataBase.getRepository(DiaryComment).insert(comment);
 		res.status(201).send(result);
+	};
+
+	//다이어리 댓글 수정하기
+	static updateComment = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: {
+				diaries: true,
+			},
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+
+		const { id: diaryId, commentId } = req.params;
+		const diary = await myDataBase.getRepository(Diary).findOne({
+			where: { id: Number(diaryId) },
+		});
+		if (!diary) {
+			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+		const comment = await myDataBase.getRepository(DiaryComment).findOne({
+			where: { id: Number(commentId) },
+		});
+		if (!comment) {
+			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
+		}
+		const { content } = req.body;
+		const newComment = new DiaryComment();
+		newComment.content = content;
+		const results = await myDataBase.getRepository(DiaryComment).update(comment.id, newComment);
+		res.send(results);
+	};
+
+	//다이어리 댓글 삭제하기
+	static deleteComment = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: {
+				diaries: true,
+			},
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+		const { id: diaryId, commentId } = req.params;
+		const diary = await myDataBase.getRepository(Diary).findOne({
+			where: { id: Number(diaryId) },
+		});
+		if (!diary) {
+			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+		const currentComment = await myDataBase.getRepository(DiaryComment).findOne({
+			where: { id: Number(commentId) },
+		});
+		if (!currentComment) {
+			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
+		}
+		await myDataBase.getRepository(DiaryComment).remove(currentComment);
+		res.send({ message: '해당 댓글이 삭제되었습니다.' });
 	};
 }
