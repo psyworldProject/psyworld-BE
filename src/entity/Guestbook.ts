@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from './User';
+import { GuestbookComment } from './GuestbookComment';
 
 @Entity()
 export class Guestbook {
@@ -14,6 +15,9 @@ export class Guestbook {
 
 	@ManyToOne(() => User, (user) => user.guestbooks)
 	owner: User;
+
+	@OneToMany(() => GuestbookComment, (guestbookComment) => guestbookComment.guestbook)
+	guestbookComments: GuestbookComment[];
 
 	@CreateDateColumn()
 	createdAt: Date;

@@ -5,6 +5,7 @@ import { Photobook } from './Photobook';
 import { Guestbook } from './Guestbook';
 import { Like } from './Like';
 import { PhotobookComment } from './PhotobookComment';
+import { GuestbookComment } from './GuestbookComment';
 
 @Entity()
 export class User {
@@ -40,6 +41,9 @@ export class User {
 
 	@OneToMany(() => Guestbook, (guestbook) => guestbook.owner)
 	guestbooks: Guestbook[];
+
+	@OneToMany(() => GuestbookComment, (photobookComment) => photobookComment.author)
+	guestbookComments: PhotobookComment[];
 
 	@OneToMany(() => Like, (like) => like.user)
 	likes: Like[];
