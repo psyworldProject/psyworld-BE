@@ -3,6 +3,7 @@ import { myDataBase } from '../db';
 import { Diary } from '../entity/Diary';
 import { User } from '../entity/User';
 import { JwtRequest } from '../middleware/AuthMiddleware';
+import { DiaryComment } from '../entity/DiaryComments';
 
 export class DiaryController {
 	// 특정 유저 다이어리 가져오기
@@ -26,7 +27,21 @@ export class DiaryController {
 		const { id } = req.params;
 		const result = await myDataBase.getRepository(Diary).findOne({
 			where: { id: Number(id) },
-			relations: ['author'],
+			relations: ['author', 'diaryComments', 'diaryComments.author'],
+			select: {
+				author: {
+					id: true,
+					username: true,
+					profileImage: true,
+				},
+				diaryComments: {
+					author: {
+						id: true,
+						username: true,
+						profileImage: true,
+					},
+				},
+			},
 		});
 		if (!result) {
 			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
@@ -108,5 +123,32 @@ export class DiaryController {
 
 		await myDataBase.getRepository(Diary).remove(currentDiary);
 		res.send({ message: '해당 다이어리가 삭제되었습니다.' });
+	};
+
+	//다이어리에 댓글 달기
+	static createComment = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: {
+				diaries: true,
+			},
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+		const diary = await myDataBase.getRepository(Diary).findOne({
+			where: { id: Number(req.params.id) },
+		});
+		if (!diary) {
+			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+		const { content } = req.body;
+		const comment = new DiaryComment();
+		comment.content = content;
+		comment.author = author;
+		comment.diary = diary;
+		const result = await myDataBase.getRepository(DiaryComment).insert(comment);
+		res.status(201).send(result);
 	};
 }
