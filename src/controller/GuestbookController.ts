@@ -141,6 +141,30 @@ export class GuestbookController {
 		const result = await myDataBase.getRepository(GuestbookComment).insert(newComment);
 		res.status(201).json({ result });
 	};
-	static updateComment = async (req: JwtRequest, res: Response) => {};
+	static updateComment = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: ['guestbooks'],
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+
+		const { commentId } = req.params;
+		const comment = await myDataBase.getRepository(GuestbookComment).findOne({
+			where: { id: Number(commentId) },
+		});
+		if (!comment) {
+			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
+		}
+		const { content } = req.body;
+		const newComment = new GuestbookComment();
+		newComment.content = content;
+
+		const result = await myDataBase.getRepository(GuestbookComment).update(comment.id, newComment);
+		res.status(200).json({ result });
+	};
 	static deleteComment = async (req: JwtRequest, res: Response) => {};
 }
