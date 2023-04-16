@@ -113,6 +113,7 @@ export class PhotobookController {
 		const { id: photobookId } = req.params;
 		const photobook = await myDataBase.getRepository(Photobook).findOne({
 			where: { id: Number(photobookId) },
+			relations: ['author'],
 		});
 		if (!photobook) {
 			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
@@ -144,6 +145,7 @@ export class PhotobookController {
 		}
 		const currentPhoto = await myDataBase.getRepository(Photobook).findOne({
 			where: { id: Number(req.params.id) },
+			relations: ['author'],
 		});
 
 		if (!currentPhoto) {
@@ -229,6 +231,7 @@ export class PhotobookController {
 
 		const currentComment = await myDataBase.getRepository(PhotobookComment).findOne({
 			where: { id: Number(commentId) },
+			relations: ['author'],
 		});
 		if (!currentComment) {
 			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
@@ -258,6 +261,7 @@ export class PhotobookController {
 
 		const currentComment = await myDataBase.getRepository(PhotobookComment).findOne({
 			where: { id: Number(commentId) },
+			relations: ['author'],
 		});
 		if (!currentComment) {
 			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });

@@ -76,6 +76,7 @@ export class GuestbookController {
 		const { id: guestbookId } = req.params;
 		const guestbook = await myDataBase.getRepository(Guestbook).findOne({
 			where: { id: Number(guestbookId) },
+			relations: ['author'],
 		});
 
 		if (!guestbook) {
@@ -105,6 +106,7 @@ export class GuestbookController {
 		const { id: guestbookId } = req.params;
 		const guestbook = await myDataBase.getRepository(Guestbook).findOne({
 			where: { id: Number(guestbookId) },
+			relations: ['author'],
 		});
 
 		if (!guestbook) {
@@ -161,6 +163,7 @@ export class GuestbookController {
 		const { commentId } = req.params;
 		const comment = await myDataBase.getRepository(GuestbookComment).findOne({
 			where: { id: Number(commentId) },
+			relations: ['author'],
 		});
 		if (!comment) {
 			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
@@ -188,6 +191,7 @@ export class GuestbookController {
 		const { commentId } = req.params;
 		const comment = await myDataBase.getRepository(GuestbookComment).findOne({
 			where: { id: Number(commentId) },
+			relations: ['author'],
 		});
 		if (!comment) {
 			return res.status(404).send({ message: '해당 댓글을 찾을 수 없습니다.' });
@@ -195,5 +199,8 @@ export class GuestbookController {
 		if (comment.author.id !== userId) {
 			return res.status(403).send({ message: '권한이 없습니다.' });
 		}
+		const result = await myDataBase.getRepository(GuestbookComment).delete(comment.id);
+
+		res.status(200).json({ result });
 	};
 }
