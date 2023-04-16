@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGenerate
 import { User } from './User';
 import { DiaryComment } from './DiaryComments';
 import { Like } from './Like';
+import { PhotobookComment } from './PhotobookComment';
 
 @Entity()
 export class Photobook {
@@ -25,4 +26,7 @@ export class Photobook {
 
 	@OneToMany(() => Like, (like) => like.photobook)
 	likes: Like[];
+
+	@OneToMany(() => PhotobookComment, (photobookComment) => photobookComment.photobook)
+	photobookComments: PhotobookComment[];
 }

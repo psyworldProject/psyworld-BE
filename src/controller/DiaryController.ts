@@ -22,7 +22,7 @@ export class DiaryController {
 		res.status(200).json({ results });
 	};
 
-	// 다이어리 상세 젇보 가져오기
+	// 다이어리 상세 정보 가져오기
 	static getDiary = async (req: Request, res: Response) => {
 		const { id } = req.params;
 		const result = await myDataBase.getRepository(Diary).findOne({

@@ -4,6 +4,7 @@ import { DiaryComment } from './DiaryComments';
 import { Photobook } from './Photobook';
 import { Guestbook } from './Guestbook';
 import { Like } from './Like';
+import { PhotobookComment } from './PhotobookComment';
 
 @Entity()
 export class User {
@@ -33,6 +34,9 @@ export class User {
 
 	@OneToMany(() => Photobook, (photobook) => photobook.author)
 	photobooks: Photobook[];
+
+	@OneToMany(() => PhotobookComment, (photobookComment) => photobookComment.author)
+	photobookComments: PhotobookComment[];
 
 	@OneToMany(() => Guestbook, (guestbook) => guestbook.owner)
 	guestbooks: Guestbook[];

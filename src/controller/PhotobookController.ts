@@ -4,6 +4,7 @@ import { myDataBase } from '../db';
 import { User } from '../entity/User';
 import { Photobook } from '../entity/Photobook';
 import { Like } from '../entity/Like';
+import { PhotobookComment } from '../entity/PhotobookComment';
 
 interface MulterS3Request extends Request {
 	file: Express.MulterS3.File;
@@ -21,22 +22,6 @@ export class PhotobookController {
 			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
 		}
 		const photobooks = await myDataBase.getRepository(Photobook).find({
-			relations: ['author'],
-			select: {
-				author: {
-					id: true,
-					username: true,
-					email: true,
-				},
-			},
-		});
-		res.status(200).json({ photobooks });
-	};
-
-	static getPhotobook = async (req: Request, res: Response) => {
-		const { id } = req.params;
-		const photobook = await myDataBase.getRepository(Photobook).findOne({
-			where: { id: Number(id) },
 			relations: ['author', 'likes'],
 			select: {
 				author: {
@@ -44,12 +29,51 @@ export class PhotobookController {
 					username: true,
 					email: true,
 				},
+				photobookComments: {
+					id: true,
+					content: true,
+					createdAt: true,
+					author: {
+						id: true,
+						username: true,
+						profileImage: true,
+					},
+				},
 			},
 		});
-		if (!photobook) {
+		if (!photobooks) {
 			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
 		}
-		res.status(200).json({ photobook });
+		res.status(200).json({ photobooks });
+	};
+
+	static getPhotobook = async (req: Request, res: Response) => {
+		const { id } = req.params;
+		const result = await myDataBase.getRepository(Photobook).findOne({
+			where: { id: Number(id) },
+			relations: ['author', 'photobookComments', 'photobookComments.author', 'likes'],
+			select: {
+				author: {
+					id: true,
+					username: true,
+					profileImage: true,
+				},
+				photobookComments: {
+					id: true,
+					content: true,
+					createdAt: true,
+					author: {
+						id: true,
+						username: true,
+						profileImage: true,
+					},
+				},
+			},
+		});
+		if (!result) {
+			return res.status(404).send({ message: '해당 일기를 찾을 수 없습니다.' });
+		}
+		res.status(200).json({ result });
 	};
 
 	static createPhotobook = async (req: JwtRequest & MulterS3Request, res: Response) => {
@@ -149,5 +173,31 @@ export class PhotobookController {
 			await myDataBase.getRepository(Like).remove(isExist);
 		}
 		return res.send({ message: 'success' });
+	};
+
+	static createComment = async (req: JwtRequest, res: Response) => {
+		const { id: userId } = req.decoded;
+		const author = await myDataBase.getRepository(User).findOne({
+			where: { id: userId },
+			relations: {
+				photobooks: true,
+			},
+		});
+		if (!author) {
+			return res.status(404).send({ message: '해당 유저를 찾을 수 없습니다.' });
+		}
+		const photobook = await myDataBase.getRepository(Photobook).findOne({
+			where: { id: Number(req.params.id) },
+		});
+		if (!photobook) {
+			return res.status(404).send({ message: '해당 사진첩을 찾을 수 없습니다.' });
+		}
+		const { content } = req.body;
+		const comment = new PhotobookComment();
+		comment.content = content;
+		comment.author = author;
+		comment.photobook = photobook;
+		const result = await myDataBase.getRepository(PhotobookComment).save(comment);
+		res.status(201).send(result);
 	};
 }
